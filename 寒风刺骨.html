@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>寒风刺骨 - 英语选择题</title>
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --card: #111827;
+    --border: #1e3a5f;
+    --text: #e0e7ff;
+    --sub: #94a3b8;
+    --ice: #38bdf8;
+    --ice-dark: #0284c7;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --gold: #f59e0b;
+    --frost: #bae6fd;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(56,189,248,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(2,132,199,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 0%, rgba(186,230,253,0.04) 0%, transparent 40%);
+    overflow-x: hidden;
+  }
+
+  /* Snow particles */
+  .snow {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    pointer-events: none; z-index:0;
+  }
+  .snowflake {
+    position: absolute; color: rgba(186,230,253,0.6);
+    font-size: 14px; animation: fall linear infinite;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-10vh) rotate(0deg); opacity:0; }
+    10%  { opacity:1; }
+    90%  { opacity:1; }
+    100% { transform: translateY(105vh) rotate(360deg); opacity:0; }
+  }
+
+  .container {
+    position: relative; z-index:1;
+    width: 680px; max-width: 95vw;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 36px 32px;
+    box-shadow: 0 0 80px rgba(56,189,248,0.08), 0 0 0 1px rgba(56,189,248,0.05) inset;
+  }
+
+  /* Frost edge effect */
+  .container::before {
+    content: '';
+    position: absolute; top:-1px; left:30px; right:30px; height:1px;
+    background: linear-gradient(90deg, transparent, rgba(56,189,248,0.3), transparent);
+    border-radius: 1px;
+  }
+
+  /* Header */
+  .header { text-align:center; margin-bottom:28px; }
+  .logo {
+    display: inline-flex; align-items:center; gap:10px;
+    font-size: 28px; font-weight:700; letter-spacing:2px;
+    background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 40%, #0284c7 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+  .logo-icon { font-size:32px; -webkit-text-fill-color: initial; }
+  .subtitle {
+    font-size:13px; color:var(--sub); letter-spacing:3px; text-transform:uppercase;
+  }
+
+  /* Progress */
+  .progress-wrap { margin-bottom:24px; }
+  .progress-info {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; color:var(--sub); margin-bottom:8px;
+  }
+  .progress-info span:last-child { color:var(--ice); font-weight:600; }
+  .progress-bar {
+    height:4px; background:rgba(255,255,255,0.06);
+    border-radius:2px; overflow:hidden;
+  }
+  .progress-fill {
+    height:100%; background: linear-gradient(90deg, var(--ice-dark), var(--ice));
+    border-radius:2px; transition: width 0.4s ease;
+  }
+
+  /* Question card */
+  .q-number {
+    font-size:12px; letter-spacing:2px; color:var(--ice); margin-bottom:8px;
+    text-transform:uppercase;
+  }
+  .q-text {
+    font-size:18px; color:var(--text); line-height:1.7;
+    margin-bottom:24px; font-weight:500;
+  }
+  .q-blank {
+    display:inline-block; min-width:80px;
+    border-bottom:2px dashed var(--ice); margin:0 6px;
+    vertical-align:bottom; transition: all 0.3s;
+    text-align:center; color:var(--ice); font-weight:700;
+  }
+  .q-blank.revealed { border-color:var(--correct); color:var(--correct); }
+
+  /* Options */
+  .options { display:flex; flex-direction:column; gap:10px; }
+  .option {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    cursor:pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.015);
+    color:var(--text);
+    font-size:16px;
+    user-select:none;
+  }
+  .option:hover {
+    border-color:rgba(56,189,248,0.3);
+    background:rgba(56,189,248,0.04);
+  }
+  .option-letter {
+    width:32px; height:32px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:14px; flex-shrink:0;
+    background:rgba(255,255,255,0.05);
+    color:var(--sub);
+    transition:all 0.2s;
+  }
+  .option:hover .option-letter { background:rgba(56,189,248,0.15); color:var(--ice); }
+
+  /* States */
+  .option.correct {
+    border-color:var(--correct) !important;
+    background:rgba(34,197,94,0.08) !important;
+    animation: pulse-green 0.4s ease;
+  }
+  .option.correct .option-letter {
+    background:var(--correct) !important; color:#fff !important;
+  }
+  .option.wrong {
+    border-color:var(--wrong) !important;
+    background:rgba(239,68,68,0.08) !important;
+    animation: shake 0.4s ease;
+  }
+  .option.wrong .option-letter {
+    background:var(--wrong) !important; color:#fff !important;
+  }
+  .option.dim { opacity:0.4; pointer-events:none; }
+
+  @keyframes pulse-green {
+    0%,100% { transform:scale(1); }
+    50% { transform:scale(1.01); }
+  }
+  @keyframes shake {
+    0%,100% { transform:translateX(0); }
+    25% { transform:translateX(-6px); }
+    75% { transform:translateX(6px); }
+  }
+
+  /* Feedback */
+  .feedback {
+    margin-top:16px; padding:12px 18px; border-radius:10px;
+    font-size:14px; font-weight:600; display:none;
+  }
+  .feedback.show { display:block; }
+  .feedback.correct-fb { background:rgba(34,197,94,0.08); color:var(--correct); border:1px solid rgba(34,197,94,0.2); }
+  .feedback.wrong-fb { background:rgba(239,68,68,0.08); color:var(--wrong); border:1px solid rgba(239,68,68,0.2); }
+
+  /* Next btn */
+  .btn-row { margin-top:20px; text-align:right; }
+  .btn-next {
+    padding:10px 28px; border-radius:10px; border:none;
+    font-size:15px; font-weight:600; cursor:pointer;
+    background: linear-gradient(135deg, var(--ice-dark), var(--ice));
+    color:#fff; letter-spacing:1px;
+    transition:all 0.2s; display:none;
+  }
+  .btn-next:hover { transform:translateY(-1px); box-shadow: 0 4px 20px rgba(56,189,248,0.3); }
+  .btn-next:active { transform:scale(0.97); }
+
+  /* Result screen */
+  .result-wrap { text-align:center; display:none; }
+  .result-score {
+    font-size:72px; font-weight:800;
+    background: linear-gradient(135deg, var(--frost), var(--ice), var(--ice-dark));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .result-label { font-size:14px; color:var(--sub); letter-spacing:2px; margin-bottom:4px; }
+  .result-msg { font-size:17px; color:var(--text); margin:8px 0 20px; }
+  .result-detail { color:var(--sub); font-size:14px; margin-bottom:20px; }
+  .btn-restart {
+    padding:12px 32px; border-radius:10px; border:none;
+    font-size:15px; font-weight:600; cursor:pointer;
+    background: rgba(255,255,255,0.06);
+    color:var(--text); letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .btn-restart:hover { background:rgba(255,255,255,0.1); }
+
+  /* Responsive */
+  @media (max-width:500px) {
+    .container { padding:28px 18px 22px; }
+    .q-text { font-size:16px; }
+    .option { padding:12px 14px; font-size:14px; }
+    .logo { font-size:22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Snowflakes -->
+<div class="snow" id="snow"></div>
+
+<div class="container">
+  <!-- Main quiz -->
+  <div id="quizArea">
+    <div class="header">
+      <div class="logo"><span class="logo-icon">❄️</span>寒风刺骨</div>
+      <div class="subtitle">English Multiple Choice</div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="progressLabel">第 1 / 32 题</span>
+        <span id="scoreLabel">✅ 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="q-number" id="qNumber">QUESTION 01</div>
+    <div class="q-text" id="qText"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="btn-row">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">下一题 →</button>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-wrap" id="resultArea">
+    <div class="header">
+      <div class="logo"><span class="logo-icon">❄️</span>寒风刺骨</div>
+      <div class="subtitle">答题完毕</div>
+    </div>
+    <div class="result-label">YOUR SCORE</div>
+    <div class="result-score" id="finalScore">0</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="result-detail" id="resultDetail"></div>
+    <button class="btn-restart" onclick="restart()">🔄 重新挑战</button>
+  </div>
+</div>
+
+<script>
+// ==================== 28道真实题目 ====================
+const questions = [
+  { q: "After long-time research and practice, he drew a(n) ___ conclusion.", options: ["trivial", "compelling", "ambiguous", "contradictory"], answer: 1 },
+  { q: "Halsey was identified as a leading ___ of the values of progressive education.", options: ["critic", "skeptic", "opponent", "proponent"], answer: 3 },
+  { q: "The ___ of our projects are unpredictable, but the potential benefits are truly enormous.", options: ["outcomes", "drawbacks", "limitations", "setbacks"], answer: 0 },
+  { q: "AI research has made ___ in recent years, leading to significant advancements in various fields.", options: ["setbacks", "conclusions", "strides", "proposals"], answer: 2 },
+  { q: "The rise of artificial intelligence ___ many traditional industries.", options: ["poses a threat to", "creates opportunities for", "makes contributions to", "has little impact on"], answer: 0 },
+  { q: "The obstacle is ___ of our progress, but we will find a way to overcome it.", options: ["on the way", "in the way", "by the way", "under the way"], answer: 1 },
+  { q: "We must ___ the environmental impact ___ when we plan the new project.", options: ["bring / into effect", "put / into practice", "take / into account", "turn / into reality"], answer: 2 },
+  { q: "Be brave enough to break away from the crowd and ___ what really matters in your life.", options: ["make sense of", "make fun of", "make use of", "make room for"], answer: 0 },
+  { q: "After graduation, it took him only a month to ___ in the new city and focus on his career development.", options: ["adjust", "adapt", "settle", "fit"], answer: 2 },
+  { q: "She spent three days polishing her resume and cover letter before ___ them to the desired company.", options: ["sending", "delivering", "presenting", "submitting"], answer: 3 },
+  { q: "The internship, though unpaid, was highly ___ and helped her master practical skills quickly.", options: ["rewarding", "beneficial", "instructive", "valuable"], answer: 2 },
+  { q: "He used social media to ___ his freelance projects, which helped him attract the attention of potential employers.", options: ["promote", "advertise", "market", "publicize"], answer: 3 },
+  { q: "After graduation, she ___ learning professional software, making herself more competitive in the job market.", options: ["focused on", "concentrated on", "engaged in", "dived into"], answer: 3 },
+  { q: "To stand out, you should ___ the basic requirements and show your willingness to learn and grow.", options: ["meet", "exceed", "go beyond", "surpass"], answer: 2 },
+  { q: "Instead of following others' career paths, he chose to ___ by combining his interests and skills.", options: ["carve his own path", "pave his own way", "follow his own route", "make his own direction"], answer: 1 },
+  { q: "Successful professionals often ___ failures and keep improving themselves to achieve better results.", options: ["learn from", "benefit from", "draw from", "profit from"], answer: 2 },
+  { q: "Official ___ show that new energy industry is developing rapidly.", options: ["figures", "statistics", "data", "reports"], answer: 1 },
+  { q: "The tech giant ___ its new automated robot at the international industrial exhibition.", options: ["displayed", "presented", "showcased", "unveiled"], answer: 3 },
+  { q: "Preferential policies can ___ more investment in innovation.", options: ["attract", "stimulate", "encourage", "promote"], answer: 1 },
+  { q: "The group is preparing for overseas business ___ in the new energy sector.", options: ["development", "growth", "expansion", "exploration"], answer: 2 },
+  { q: "Service-oriented manufacturing industries ___ a large proportion of the regional economy.", options: ["make up", "constitute", "represent", "account for"], answer: 3 },
+  { q: "The investment in technological innovation projects ___ over ten billion yuan.", options: ["totals", "amounts to", "reaches", "equals"], answer: 1 },
+  { q: "Domestic equipment brands are trying to gain ___ in the international market.", options: ["competitive edge", "brand recognition", "market share", "sales revenue"], answer: 2 },
+  { q: "Digital technology helps enterprises simplify and optimize the whole ___.", options: ["production process", "supply chain", "operation system", "management structure"], answer: 1 },
+  { q: "___ at colleagues can destroy workplace harmony.", options: ["Shouting", "Snapping", "Yelling", "Screaming"], answer: 2 },
+  { q: "___ sessions offer invaluable support and skill development for vocational success.", options: ["Training", "Mentoring", "Tutoring", "Coaching"], answer: 3 },
+  { q: "Identifying the ___ of stress can help you cope effectively with challenges at work.", options: ["causes", "triggers", "sources", "origins"], answer: 1 },
+  { q: "Supervisors with ___ attitudes might hinder employees' creativity in the workplace, preventing innovation and individual growth.", options: ["controlling", "overbearing", "domineering", "authoritarian"], answer: 1 },
+  { q: "What should we ___ in order to avoid arguing with our colleagues?", options: ["look forward to", "get used to", "pay attention to", "stick to"], answer: 2 },
+  { q: "He tried to ___ thinking that if he panicked, so would his staff.", options: ["act quickly", "speak loudly", "work harder", "stay calm"], answer: 3 },
+  { q: "This is what Murphy's Law tells us: If things can ___, they will.", options: ["get better", "fall apart", "go wrong", "turn around"], answer: 2 },
+  { q: "During her internship, she ___ her mentor to develop an innovative marketing strategy that significantly improved the company's online presence.", options: ["competed against", "took over from", "disagreed with", "was engaged with"], answer: 3 }
+];
+
+// ==================== 逻辑 ====================
+let currentIdx = 0;
+let score = 0;
+let answered = false;
+
+const $qNumber = document.getElementById('qNumber');
+const $qText = document.getElementById('qText');
+const $options = document.getElementById('options');
+const $feedback = document.getElementById('feedback');
+const $btnNext = document.getElementById('btnNext');
+const $progressLabel = document.getElementById('progressLabel');
+const $scoreLabel = document.getElementById('scoreLabel');
+const $progressFill = document.getElementById('progressFill');
+const $quizArea = document.getElementById('quizArea');
+const $resultArea = document.getElementById('resultArea');
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[currentIdx];
+  $qNumber.textContent = `QUESTION ${String(currentIdx + 1).padStart(2, '0')}`;
+  $qText.innerHTML = q.q.replace(/___/g, '<span class="q-blank">___</span>');
+  $options.innerHTML = '';
+  $feedback.className = 'feedback';
+  $feedback.textContent = '';
+  $btnNext.style.display = 'none';
+
+  const labels = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.innerHTML = `<span class="option-letter">${labels[i]}</span><span>${opt}</span>`;
+    div.addEventListener('click', () => selectAnswer(i, div));
+    $options.appendChild(div);
+  });
+
+  $progressLabel.textContent = `第 ${currentIdx + 1} / ${questions.length} 题`;
+  $progressFill.style.width = `${(currentIdx / questions.length) * 100}%`;
+}
+
+function selectAnswer(idx, el) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[currentIdx];
+  const correct = q.answer;
+  const allOpts = $options.querySelectorAll('.option');
+
+  // Dim all non-selected
+  allOpts.forEach(o => o.classList.add('dim'));
+
+  if (idx === correct) {
+    el.classList.add('correct');
+    el.classList.remove('dim');
+    score++;
+    $feedback.textContent = '✅ 回答正确！';
+    $feedback.className = 'feedback correct-fb show';
+  } else {
+    el.classList.add('wrong');
+    el.classList.remove('dim');
+    // Highlight correct
+    allOpts[correct].classList.add('correct');
+    allOpts[correct].classList.remove('dim');
+    $feedback.textContent = `❌ 回答错误！正确答案是 ${['A','B','C','D'][correct]}. ${q.options[correct]}`;
+    $feedback.className = 'feedback wrong-fb show';
+  }
+
+  // Reveal blank
+  const blank = $qText.querySelector('.q-blank');
+  if (blank) {
+    blank.textContent = q.options[correct];
+    blank.classList.add('revealed');
+  }
+
+  $scoreLabel.textContent = `✅ ${score}`;
+
+  if (currentIdx >= questions.length - 1) {
+    $btnNext.textContent = '查看结果 📊';
+  }
+  $btnNext.style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  currentIdx++;
+  if (currentIdx >= questions.length) {
+    showResult();
+    return;
+  }
+  $progressFill.style.width = `${(currentIdx / questions.length) * 100}%`;
+  renderQuestion();
+}
+
+function showResult() {
+  $quizArea.style.display = 'none';
+  $resultArea.style.display = 'block';
+
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+  document.getElementById('finalScore').textContent = `${score} / ${total}`;
+  document.getElementById('resultDetail').textContent = `正确率 ${pct}%`;
+
+  let msg = '';
+  if (pct === 100) msg = '🏆 完美！寒风也挡不住你的实力！';
+  else if (pct >= 80) msg = '👏 非常优秀，继续保持！';
+  else if (pct >= 60) msg = '👍 还不错，再接再厉！';
+  else if (pct >= 40) msg = '📖 还需努力，多多练习！';
+  else msg = '💪 别灰心，每一次错误都是进步的阶梯！';
+  document.getElementById('resultMsg').textContent = msg;
+}
+
+function restart() {
+  currentIdx = 0;
+  score = 0;
+  $quizArea.style.display = 'block';
+  $resultArea.style.display = 'none';
+  $scoreLabel.textContent = '✅ 0';
+  $progressFill.style.width = '0%';
+  $btnNext.textContent = '下一题 →';
+  renderQuestion();
+}
+
+// Snow
+(function createSnow() {
+  const snow = document.getElementById('snow');
+  const chars = ['❄','❅','❆','✦','•'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('span');
+    el.className = 'snowflake';
+    el.textContent = chars[Math.floor(Math.random() * chars.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.fontSize = (10 + Math.random() * 14) + 'px';
+    el.style.animationDuration = (8 + Math.random() * 14) + 's';
+    el.style.animationDelay = Math.random() * 10 + 's';
+    el.style.opacity = 0.3 + Math.random() * 0.4;
+    snow.appendChild(el);
+  }
+})();
+
+// Init
+renderQuestion();
+</script>
+</body>
+</html>
